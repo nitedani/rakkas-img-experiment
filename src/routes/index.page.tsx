@@ -15,6 +15,10 @@ const urls = [
     src: "https://r4.wallpaperflare.com/wallpaper/826/109/269/spiderman-into-the-spider-verse-2018-movies-movies-spiderman-wallpaper-233b732dbd798b153fc612f7381bd878.jpg",
     width: "100%",
   },
+  {
+    src: "https://i.pinimg.com/736x/ff/6b/13/ff6b13316842b4b84f237f605f0c3f33.jpg",
+    width: 800,
+  },
 ];
 
 export default function HomePage() {
