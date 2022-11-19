@@ -33,7 +33,7 @@ export const useSrcSet = ({ src, width: reqWidth }: ImageProps) => {
       const original = await getOriginal(
         src,
         ctx.request,
-        isPxRequest ? Number(reqWidth) : 600
+        isPxRequest ? Number(reqWidth) : optimalWidths[0]
       );
       const stats = original.metadata;
       const originalWidth = stats.width;
