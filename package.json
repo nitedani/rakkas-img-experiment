@@ -1,0 +1,32 @@
+{
+  "name": "-TODO-",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "rakkas",
+    "build": "rakkas build",
+    "start": "node dist/server",
+    "format": "prettier --write --ignore-unknown src",
+    "test": "pnpm test:typecheck && pnpm test:format && pnpm test:lint",
+    "test:typecheck": "tsc -p tsconfig.json --noEmit",
+    "test:format": "prettier --check --ignore-unknown src",
+    "test:lint": "eslint . --ignore-pattern dist"
+  },
+  "devDependencies": {
+    "@rakkasjs/eslint-config": "0.6.7",
+    "@types/react": "^18.0.25",
+    "@types/react-dom": "^18.0.8",
+    "@types/sharp": "^0.31.0",
+    "eslint": "^8.27.0",
+    "prettier": "^2.7.1",
+    "rakkasjs": "0.6.7",
+    "typescript": "^4.8.4",
+    "vite": "^3.2.3",
+    "vite-tsconfig-paths": "^3.5.2"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "sharp": "^0.31.2"
+  }
+}
