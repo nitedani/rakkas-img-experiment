@@ -2,8 +2,8 @@ import { useSSQ } from "rakkasjs";
 import { ImageProps } from "./image-types";
 import { getOriginal } from "./image-utils";
 
-const largeScreenSizes = [600, 1000, 1400, 2000];
-const getOptimalWidth = (userAgent: string | null) => {
+const largeScreenSizes = [1000, 1400, 2000];
+export const getOptimalWidth = (userAgent: string | null) => {
   if (!userAgent) {
     return largeScreenSizes;
   }
@@ -15,7 +15,7 @@ const getOptimalWidth = (userAgent: string | null) => {
   return largeScreenSizes;
 };
 
-export const useOptimizedImage = ({ src, width: reqWidth }: ImageProps) => {
+export const useSrcSet = ({ src, width: reqWidth }: ImageProps) => {
   return useSSQ(
     async (ctx) => {
       let optimalWidths: number[] = largeScreenSizes;

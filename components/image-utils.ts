@@ -69,15 +69,16 @@ export const createSize = async ({
     return cachedSize.data;
   }
 
-  const resizeWidth =
-    width < 400 && cachedImage.width >= width + 200 ? width + 200 : width;
+  const resized = instance.clone().webp({
+    quality,
+  });
 
-  const resized = instance
-    .clone()
-    .resize(resizeWidth, undefined, { fit: "inside" })
-    .webp({
-      quality,
-    });
+  if (width < cachedImage.width) {
+    const resizeWidth =
+      width < 400 && cachedImage.width >= width + 200 ? width + 200 : width;
+    resized.resize(resizeWidth, undefined, { fit: "inside" });
+    console.log("created size", width);
+  }
 
   const data = await resized.toBuffer();
 
