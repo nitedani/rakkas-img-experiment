@@ -25,7 +25,7 @@ export async function get(req: Request) {
       if (cachedSize) {
         return new Response(cachedSize.data, {
           headers: {
-            "Content-Type": "image/jpeg",
+            "Content-Type": "image/webp",
             "Content-Length": cachedSize.data.length.toString(),
           },
         });
@@ -42,7 +42,7 @@ export async function get(req: Request) {
         });
         return new Response(data, {
           headers: {
-            "Content-Type": "image/jpeg",
+            "Content-Type": "image/webp",
             "Content-Length": data.length.toString(),
           },
         });
@@ -68,7 +68,7 @@ export async function get(req: Request) {
       imageCache.set(id, cachedImage);
       return new Response(data, {
         headers: {
-          "Content-Type": "image/jpeg",
+          "Content-Type": "image/webp",
           "Content-Length": data.length.toString(),
         },
       });
