@@ -81,7 +81,6 @@ export class OptimizedImage {
       this.originalData = buffer;
       this.sharpInstance = sharp(buffer);
       this.originalSize = (await this.sharpInstance.metadata()).width ?? 0;
-     
     })();
     return this.initializingPromise;
   }
