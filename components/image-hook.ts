@@ -1,6 +1,6 @@
 import { useSSQ } from "rakkasjs";
+import { imageCache, OptimizedImage } from "./image-cache";
 import { ImageProps } from "./image-types";
-import { getOriginal } from "./image-utils";
 
 const largeScreenSizes = [1000, 1400, 2000];
 export const getOptimalWidth = (userAgent: string | null) => {
@@ -30,13 +30,17 @@ export const useSrcSet = ({ src, width: reqWidth }: ImageProps) => {
         const userAgent = ctx.request.headers.get("user-agent");
         optimalWidths = getOptimalWidth(userAgent);
       }
-      const original = await getOriginal(
-        src,
-        ctx.request,
-        isPxRequest ? Number(reqWidth) : optimalWidths[0]
-      );
-      const stats = original.metadata;
-      const originalWidth = stats.width;
+      let image = imageCache.get(src);
+      if (!image) {
+        image = new OptimizedImage(src);
+        image.allowedSizes = new Set([
+          isPxRequest ? Number(reqWidth) : optimalWidths[0],
+        ]);
+        imageCache.set(src, image);
+      }
+      await image.initialize(ctx.request);
+
+      const originalWidth = image.originalSize;
 
       const requestableSizes = [];
       if (originalWidth) {
@@ -58,9 +62,9 @@ export const useSrcSet = ({ src, width: reqWidth }: ImageProps) => {
       }
       requestableSizes.sort((a, b) => a - b);
 
-      if (original.allowedWidths.size < 5) {
+      if (image.allowedSizes.size < 5) {
         for (const size of requestableSizes) {
-          original.allowedWidths.add(size);
+          image.allowedSizes.add(size);
         }
       }
 

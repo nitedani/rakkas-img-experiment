@@ -1,6 +1,4 @@
-import { imageCache } from "components/image-cache";
-import { createSize, getOriginal } from "components/image-utils";
-import sharp from "sharp";
+import { imageCache, SizeError } from "components/image-cache";
 
 const pending = new Map<string, Promise<Response>>();
 export async function get(req: Request) {
@@ -16,62 +14,20 @@ export async function get(req: Request) {
 
   const promise = (async () => {
     const width = Number(_size);
-
-    let cachedImage = imageCache.get(id);
-    if (cachedImage) {
-      const cachedSize = cachedImage.sizes.find(
-        (s) => s.width === Number(width)
-      );
-      if (cachedSize) {
-        return new Response(cachedSize.data, {
-          headers: {
-            "Content-Type": "image/webp",
-            "Content-Length": cachedSize.data.length.toString(),
-          },
-        });
-      } else {
-        const original = await getOriginal(id, req);
-        if (!original.allowedWidths.has(width)) {
-          return new Response("Invalid size specified", { status: 404 });
-        }
-        const instance = sharp(original.data);
-        const data = await createSize({
-          instance,
-          cachedImage,
-          width: Number(width),
-        });
-        return new Response(data, {
-          headers: {
-            "Content-Type": "image/webp",
-            "Content-Length": data.length.toString(),
-          },
-        });
-      }
-    } else {
-      const original = await getOriginal(id, req);
-      if (!original.allowedWidths.has(width)) {
-        return new Response("Invalid size specified", { status: 404 });
-      }
-
-      const instance = sharp(original.data);
-      const originalWidth = original.metadata.width;
-
-      cachedImage = {
-        width: originalWidth ?? 0,
-        sizes: [],
-      };
-      const data = await createSize({
-        cachedImage,
-        instance,
-        width,
-      });
-      imageCache.set(id, cachedImage);
-      return new Response(data, {
+    const cachedImage = imageCache.get(id)!;
+    try {
+      const cachedSize = await cachedImage.getSize(width);
+      return new Response(cachedSize, {
         headers: {
           "Content-Type": "image/webp",
-          "Content-Length": data.length.toString(),
+          "Content-Length": cachedSize.length.toString(),
         },
       });
+    } catch (error: any) {
+      if (error instanceof SizeError) {
+        return new Response("Size not allowd", { status: 400 });
+      }
+      return new Response("Bad request", { status: 400 });
     }
   })();
   pending.set(`${id}_${_size}`, promise);
