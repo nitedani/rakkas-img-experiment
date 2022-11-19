@@ -23,6 +23,13 @@ export default function HomePage() {
         width={"100%"}
         // height={"100%"}
       />
+      <Image
+        src={
+          "https://r4.wallpaperflare.com/wallpaper/826/109/269/spiderman-into-the-spider-verse-2018-movies-movies-spiderman-wallpaper-233b732dbd798b153fc612f7381bd878.jpg"
+        }
+        width={"100%"}
+        // height={"100%"}
+      />
     </div>
   );
 }

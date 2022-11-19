@@ -1,6 +1,6 @@
 import { useRequestContext } from "rakkasjs";
 import { Suspense, useEffect, useId } from "react";
-import { getOptimalWidth, useSrcSet as useSrcSet } from "./image-hook";
+import { getOptimalStartingWidth, useSrcSet as useSrcSet } from "./image-hook";
 import { ImageProps } from "./image-types";
 
 const ImageBase = ({
@@ -17,9 +17,9 @@ const ImageBase = ({
   const ctx = useRequestContext();
   const size = isPxRequest
     ? width
-    : getOptimalWidth(
+    : getOptimalStartingWidth(
         ctx?.request.headers.get("user-agent") || window.navigator.userAgent
-      )[0];
+      );
 
   return (
     <div
