@@ -1,7 +1,8 @@
+import { cacheSizeMb } from "./constants";
 import { OptimizedImage } from "./optimized-image";
 
 class ImageCache {
-  maxSize = 1 * 1024 * 1024;
+  maxSize = cacheSizeMb * 1024 * 1024;
   cache: Map<string, OptimizedImage> = new Map();
 
   get(key: string) {

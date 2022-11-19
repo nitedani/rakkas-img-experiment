@@ -2,6 +2,8 @@ import { readFile } from "fs/promises";
 import { join } from "path";
 import { cwd } from "process";
 import sharp from "sharp";
+import { defaultSizes } from "./constants";
+import { quality as defaultQuality } from "./constants";
 
 export class SizeError extends Error {
   constructor() {
@@ -11,7 +13,7 @@ export class SizeError extends Error {
 }
 export class OptimizedImage {
   id: string;
-  quality = 70;
+  quality = defaultQuality;
 
   // set in initialize
   originalData!: Buffer;
@@ -20,7 +22,7 @@ export class OptimizedImage {
 
   initializingPromise?: Promise<void>;
 
-  allowedSizes: Set<number> = new Set();
+  allowedSizes: Set<number> = new Set(defaultSizes);
   sizes: Map<number, Buffer> = new Map();
 
   locked = false;
@@ -49,7 +51,7 @@ export class OptimizedImage {
       throw new Error("Image not initialized");
     }
     if (!this.allowedSizes.has(size)) {
-      throw new SizeError();
+      // throw new SizeError();
     }
 
     await this.initializingPromise;

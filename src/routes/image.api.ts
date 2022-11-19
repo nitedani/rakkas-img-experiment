@@ -1,5 +1,5 @@
 import { imageCache } from "components/image-cache";
-import { SizeError } from "components/optimized-image";
+import { OptimizedImage, SizeError } from "components/optimized-image";
 
 const pending = new Map<string, Promise<Response>>();
 export async function get(req: Request) {
@@ -15,9 +15,14 @@ export async function get(req: Request) {
 
   const promise = (async () => {
     const width = Number(_size);
-    const cachedImage = imageCache.get(id)!;
+    let image = imageCache.get(id);
+    if (!image) {
+      image = new OptimizedImage(id);
+      await image.initialize(req);
+      imageCache.set(id, image);
+    }
     try {
-      const cachedSize = await cachedImage.getSize(width);
+      const cachedSize = await image.getSize(width);
       return new Response(cachedSize, {
         headers: {
           "Content-Type": "image/webp",
