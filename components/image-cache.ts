@@ -1,98 +1,40 @@
-import { readFile } from "fs/promises";
-import { join } from "path";
-import { cwd } from "process";
-import sharp from "sharp";
+import { OptimizedImage } from "./optimized-image";
 
-export const imageCache = new Map<string, OptimizedImage>();
+class ImageCache {
+  maxSize = 1 * 1024 * 1024;
+  cache: Map<string, OptimizedImage> = new Map();
 
-export class SizeError extends Error {
-  constructor() {
-    super();
-    this.name = "SizeError";
+  get(key: string) {
+    const val = this.cache.get(key);
+    if (val) {
+      val.lastAccess = Date.now();
+      val.lock();
+    }
+    return val;
   }
-}
-export class OptimizedImage {
-  id: string;
-  quality = 70;
-
-  // set in initialize
-  originalData!: Buffer;
-  originalSize!: number;
-  sharpInstance!: sharp.Sharp;
-
-  initializingPromise?: Promise<void>;
-
-  allowedSizes: Set<number> = new Set();
-  sizes: Map<number, Buffer> = new Map();
-
-  constructor(id: string) {
-    this.id = id;
+  set(key: string, value: OptimizedImage) {
+    value.lock();
+    this.cache.set(key, value);
+    this.sweep();
   }
-
-  async getSize(size: number) {
-    if (this.sizes.has(size)) {
-      return this.sizes.get(size)!;
+  sweep() {
+    let size = 0;
+    for (const image of this.cache.values()) {
+      size += image.getCacheSize();
     }
-    if (!this.initializingPromise) {
-      throw new Error("Image not initialized");
-    }
-    if (!this.allowedSizes.has(size)) {
-      throw new SizeError();
-    }
-
-    await this.initializingPromise;
-    const resized = this.sharpInstance.clone().webp({
-      quality: this.quality,
-    });
-
-    if (size < this.originalSize) {
-      const resizeWidth =
-        size < 400 && this.originalSize >= size + 200 ? size + 200 : size;
-      resized.resize(resizeWidth, undefined, { fit: "inside" });
-    }
-
-    const data = await resized.toBuffer();
-
-    if (size < this.originalSize) {
-      console.log(
-        `generated size ${this.originalSize} -> ${size}, ${
-          this.originalData.byteLength / 1024
-        }kb -> ${data.byteLength / 1024}kb`
-      );
-    } else {
-      console.log(
-        `compressed original size ${this.originalSize}, ${
-          this.originalData.byteLength / 1024
-        }kb -> ${data.byteLength / 1024}kb`
-      );
-    }
-
-    this.sizes.set(size, data);
-
-    return data;
-  }
-
-  async initialize(request: Request) {
-    if (this.initializingPromise) {
-      return this.initializingPromise;
-    }
-    this.initializingPromise = (async () => {
-      let buffer: Buffer;
-      const isLocal = this.id.startsWith("/");
-      if (isLocal) {
-        buffer = await readFile(join(cwd(), this.id));
-      } else {
-        const res = await fetch(this.id, {
-          headers: request.headers,
-        });
-        const blob = await res.blob();
-        buffer = Buffer.from(await blob.arrayBuffer());
+    if (size > this.maxSize) {
+      const sorted = [...this.cache.entries()]
+        .sort(([, a], [, b]) => b.lastAccess - a.lastAccess)
+        .filter(([, image]) => !image.locked);
+      for (const [key, image] of sorted) {
+        if (size <= this.maxSize) {
+          break;
+        }
+        size -= image.getCacheSize();
+        this.cache.delete(key);
       }
-
-      this.originalData = buffer;
-      this.sharpInstance = sharp(buffer);
-      this.originalSize = (await this.sharpInstance.metadata()).width ?? 0;
-    })();
-    return this.initializingPromise;
+    }
   }
 }
+
+export const imageCache = new ImageCache();

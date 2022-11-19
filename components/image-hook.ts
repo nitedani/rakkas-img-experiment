@@ -1,6 +1,7 @@
 import { useSSQ } from "rakkasjs";
-import { imageCache, OptimizedImage } from "./image-cache";
+import { OptimizedImage } from "./optimized-image";
 import { ImageProps } from "./image-types";
+import { imageCache } from "./image-cache";
 
 const defaultSizes = [600, 1000, 1400, 2000, 3840];
 export const getOptimalStartingWidth = (userAgent: string | null) => {

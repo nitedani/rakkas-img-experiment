@@ -1,4 +1,5 @@
-import { imageCache, SizeError } from "components/image-cache";
+import { imageCache } from "components/image-cache";
+import { SizeError } from "components/optimized-image";
 
 const pending = new Map<string, Promise<Response>>();
 export async function get(req: Request) {
