@@ -54,8 +54,7 @@ export async function get(req: Request) {
       }
 
       const instance = sharp(original.data);
-      const stats = await instance.metadata();
-      const originalWidth = stats.width;
+      const originalWidth = original.metadata.width;
 
       cachedImage = {
         width: originalWidth ?? 0,
