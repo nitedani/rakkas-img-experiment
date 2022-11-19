@@ -55,13 +55,13 @@ export class OptimizedImage {
 
     if (size < this.originalSize) {
       console.log(
-        `generated size ${size}, ${this.originalData.byteLength / 1024}kb -> ${
-          data.byteLength / 1024
-        }kb`
+        `generated size ${this.originalSize} -> ${size}, ${
+          this.originalData.byteLength / 1024
+        }kb -> ${data.byteLength / 1024}kb`
       );
     } else {
       console.log(
-        `compressed original size ${size}, ${
+        `compressed original size ${this.originalSize}, ${
           this.originalData.byteLength / 1024
         }kb -> ${data.byteLength / 1024}kb`
       );
