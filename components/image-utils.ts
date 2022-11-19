@@ -77,7 +77,9 @@ export const createSize = async ({
     const resizeWidth =
       width < 400 && cachedImage.width >= width + 200 ? width + 200 : width;
     resized.resize(resizeWidth, undefined, { fit: "inside" });
-    console.log("created size", width);
+    console.log("generated size", width);
+  } else {
+    console.log("compressed original resolution", width);
   }
 
   const data = await resized.toBuffer();
