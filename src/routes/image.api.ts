@@ -22,13 +22,23 @@ export async function get(req: Request) {
       imageCache.set(id, image);
     }
     try {
-      const cachedSize = await image.getSize(width);
-      return new Response(cachedSize, {
-        headers: {
-          "Content-Type": "image/webp",
-          "Content-Length": cachedSize.length.toString(),
-        },
-      });
+      const { data, redirectTo } = await image.getSize(width);
+      if (data) {
+        return new Response(data, {
+          headers: {
+            "Content-Type": "image/webp",
+            "Content-Length": data.length.toString(),
+          },
+        });
+      }
+      if (redirectTo) {
+        return new Response("Found", {
+          headers: {
+            Location: "/image?id=" + id + "&size=" + redirectTo,
+          },
+          status: 302,
+        });
+      }
     } catch (error: any) {
       if (error instanceof SizeError) {
         return new Response("Size not allowd", { status: 400 });

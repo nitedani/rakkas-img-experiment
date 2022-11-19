@@ -45,7 +45,7 @@ export class OptimizedImage {
 
   async getSize(size: number) {
     if (this.sizes.has(size)) {
-      return this.sizes.get(size)!;
+      return { data: this.sizes.get(size)!, redirectTo: null };
     }
     if (!this.initializingPromise) {
       throw new Error("Image not initialized");
@@ -63,6 +63,11 @@ export class OptimizedImage {
       const resizeWidth =
         size < 400 && this.originalSize >= size + 200 ? size + 200 : size;
       resized.resize(resizeWidth, undefined, { fit: "inside" });
+    } else if (size > this.originalSize) {
+      return {
+        redirectTo: this.originalSize,
+        data: null,
+      };
     }
 
     const data = await resized.toBuffer();
@@ -83,7 +88,7 @@ export class OptimizedImage {
 
     this.sizes.set(size, data);
 
-    return data;
+    return { data, redirectTo: null };
   }
 
   async initialize(request: Request) {
