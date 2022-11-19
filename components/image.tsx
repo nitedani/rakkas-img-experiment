@@ -72,7 +72,7 @@ export const SuspendedImage = ({
   });
 
   const sizes = optimizedImage.data;
-  console.log(`available sizes for ${src}, `, sizes);
+  // console.log(`available sizes for ${src}, `, sizes);
 
   const srcSet = sizes.reduce(
     (acc, width) => acc + `/image?id=${src}&size=${width} ${width}w,`,

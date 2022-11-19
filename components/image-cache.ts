@@ -13,7 +13,7 @@ export class SizeError extends Error {
 }
 export class OptimizedImage {
   id: string;
-  quality = 80;
+  quality = 70;
 
   // set in initialize
   originalData!: Buffer;
@@ -49,12 +49,23 @@ export class OptimizedImage {
       const resizeWidth =
         size < 400 && this.originalSize >= size + 200 ? size + 200 : size;
       resized.resize(resizeWidth, undefined, { fit: "inside" });
-      console.log("generated size", size);
-    } else {
-      console.log("compressed original resolution", size);
     }
 
     const data = await resized.toBuffer();
+
+    if (size < this.originalSize) {
+      console.log(
+        `generated size ${size}, ${this.originalData.byteLength / 1024}kb -> ${
+          data.byteLength / 1024
+        }kb`
+      );
+    } else {
+      console.log(
+        `compressed original size ${size}, ${
+          this.originalData.byteLength / 1024
+        }kb -> ${data.byteLength / 1024}kb`
+      );
+    }
 
     this.sizes.set(size, data);
 
