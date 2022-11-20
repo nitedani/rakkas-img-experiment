@@ -10,6 +10,9 @@ export class SizeError extends Error {
     this.name = "SizeError";
   }
 }
+
+// keep this in memory forever
+const _allowedSizes: Map<string, Set<number>> = new Map();
 export class OptimizedImage {
   id: string;
 
@@ -20,7 +23,6 @@ export class OptimizedImage {
 
   initializingPromise?: Promise<void>;
 
-  allowedSizes: Set<number> = new Set(defaultSizes);
   sizesWebp: Map<number, Buffer> = new Map();
   sizesAvif: Map<number, Buffer> = new Map();
   locked = false;
@@ -29,6 +31,16 @@ export class OptimizedImage {
 
   constructor(id: string) {
     this.id = id;
+  }
+
+  get allowedSizes() {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    //@ts-ignore
+    return _allowedSizes.get(this.id);
+  }
+
+  set allowedSizes(sizes: Set<number>) {
+    _allowedSizes.set(this.id, sizes);
   }
 
   lock() {
@@ -61,11 +73,13 @@ export class OptimizedImage {
       throw new Error("Image not initialized");
     }
 
-    if (!this.allowedSizes.has(size)) {
-      // throw new SizeError();
-    }
-
     await this.initializingPromise;
+
+    if (!this.allowedSizes.has(size)) {
+      console.log("size not allowed", size);
+
+      throw new SizeError();
+    }
 
     let newSize = size;
     if (newSize < 400) {
@@ -129,11 +143,15 @@ export class OptimizedImage {
     return { data, redirectTo: null };
   }
 
-  initialize(request: Request) {
+  initialize(request: Request, allowedSizes: number[] = defaultSizes) {
     if (this.initializingPromise) {
       return this.initializingPromise;
     }
     this.initializingPromise = (async () => {
+      // this can already be set, allowedSizes is not cleared when this instance is disposed
+      if (!this.allowedSizes) {
+        this.allowedSizes = new Set(allowedSizes);
+      }
       let buffer: Buffer;
       const isLocal = this.id.startsWith("/");
       if (isLocal) {
@@ -158,6 +176,7 @@ export class OptimizedImage {
       this.originalData = buffer;
       this.sharpInstance = sharp(buffer);
       this.originalSize = (await this.sharpInstance.metadata()).width ?? 0;
+      this.allowedSizes.add(this.originalSize);
     })();
     return this.initializingPromise;
   }
