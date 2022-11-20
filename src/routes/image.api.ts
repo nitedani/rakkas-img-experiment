@@ -1,9 +1,10 @@
 import { imageCache } from "components/image-cache";
 import { OptimizedImage, SizeError } from "components/optimized-image";
+import { RequestContext } from "rakkasjs";
 
 const pending = new Map<string, Promise<Response>>();
-export async function get(req: Request) {
-  const searchParams = new URL(req.url).searchParams;
+export async function get(ctx: RequestContext) {
+  const searchParams = ctx.url.searchParams;
   const id = searchParams.get("id");
   const _size = searchParams.get("size");
   if (!id || !_size) {
@@ -18,27 +19,29 @@ export async function get(req: Request) {
     let image = imageCache.get(id);
     if (!image) {
       image = new OptimizedImage(id);
-      await image.initialize(req);
+      await image.initialize(ctx.request);
       imageCache.set(id, image);
     }
+
     try {
-      const { data, redirectTo } = await image.getSize(width);
+      const format = ctx.request.headers.get("accept")?.includes("avif")
+        ? "avif"
+        : "webp";
+      const { data, redirectTo } = await image.getSize(width, format);
       if (data) {
         return new Response(data, {
           headers: {
-            "Content-Type": "image/webp",
+            "Content-Type": `image/${format}`,
             "Content-Length": data.length.toString(),
           },
         });
       }
-      if (redirectTo) {
-        return new Response("Found", {
-          headers: {
-            Location: "/image?id=" + id + "&size=" + redirectTo,
-          },
-          status: 302,
-        });
-      }
+      return new Response("Found", {
+        headers: {
+          Location: "/image?id=" + id + "&size=" + redirectTo,
+        },
+        status: 302,
+      });
     } catch (error: any) {
       if (error instanceof SizeError) {
         return new Response("Size not allowd", { status: 400 });

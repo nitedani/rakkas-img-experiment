@@ -2,8 +2,7 @@ import { readFile } from "fs/promises";
 import { join } from "path";
 import { cwd } from "process";
 import sharp from "sharp";
-import { defaultSizes } from "./constants";
-import { quality as defaultQuality } from "./constants";
+import { avifQuality, defaultSizes, webpQuality } from "./constants";
 
 export class SizeError extends Error {
   constructor() {
@@ -13,7 +12,6 @@ export class SizeError extends Error {
 }
 export class OptimizedImage {
   id: string;
-  quality = defaultQuality;
 
   // set in initialize
   originalData!: Buffer;
@@ -23,8 +21,8 @@ export class OptimizedImage {
   initializingPromise?: Promise<void>;
 
   allowedSizes: Set<number> = new Set(defaultSizes);
-  sizes: Map<number, Buffer> = new Map();
-
+  sizesWebp: Map<number, Buffer> = new Map();
+  sizesAvif: Map<number, Buffer> = new Map();
   locked = false;
   lockTimeout?: NodeJS.Timeout;
   lastAccess = Date.now();
@@ -43,38 +41,69 @@ export class OptimizedImage {
     }, 5000);
   }
 
-  async getSize(size: number) {
-    if (this.sizes.has(size)) {
-      return { data: this.sizes.get(size)!, redirectTo: null };
+  async getSize(size: number, format: "webp" | "avif") {
+    switch (format) {
+      case "avif":
+        if (this.sizesAvif.has(size)) {
+          return { data: this.sizesAvif.get(size)!, redirectTo: null };
+        }
+        break;
+      case "webp":
+        if (this.sizesWebp.has(size)) {
+          return { data: this.sizesWebp.get(size)!, redirectTo: null };
+        }
+        break;
+      default:
+        throw new Error("Invalid format");
     }
+
     if (!this.initializingPromise) {
       throw new Error("Image not initialized");
     }
+
     if (!this.allowedSizes.has(size)) {
       // throw new SizeError();
     }
 
     await this.initializingPromise;
-    const resized = this.sharpInstance.clone().webp({
-      quality: this.quality,
-    });
 
-    if (size < this.originalSize) {
-      const resizeWidth =
-        size < 400 && this.originalSize >= size + 200 ? size + 200 : size;
-      resized.resize(resizeWidth, undefined, { fit: "inside" });
-    } else if (size > this.originalSize) {
+    let newSize = size;
+    if (newSize < 400) {
+      newSize += 100;
+    }
+
+    if (newSize > this.originalSize) {
       return {
         redirectTo: this.originalSize,
         data: null,
       };
     }
 
-    const data = await resized.toBuffer();
+    let img: sharp.Sharp;
+    switch (format) {
+      case "avif":
+        img = this.sharpInstance.clone().avif({
+          quality: avifQuality,
+        });
+        break;
+      case "webp":
+        img = this.sharpInstance.clone().webp({
+          quality: webpQuality,
+        });
+        break;
+      default:
+        throw new Error("Invalid format");
+    }
 
-    if (size < this.originalSize) {
+    if (newSize < this.originalSize) {
+      img.resize(newSize, undefined, { fit: "inside" });
+    }
+
+    const data = await img.toBuffer();
+
+    if (newSize < this.originalSize) {
       console.log(
-        `generated size ${this.originalSize} -> ${size}, ${
+        `generated size ${this.originalSize} -> ${newSize}, ${
           this.originalData.byteLength / 1024
         }kb -> ${data.byteLength / 1024}kb`
       );
@@ -86,12 +115,21 @@ export class OptimizedImage {
       );
     }
 
-    this.sizes.set(size, data);
+    switch (format) {
+      case "avif":
+        this.sizesAvif.set(size, data);
+        break;
+      case "webp":
+        this.sizesWebp.set(size, data);
+        break;
+      default:
+        throw new Error("Invalid format");
+    }
 
     return { data, redirectTo: null };
   }
 
-  async initialize(request: Request) {
+  initialize(request: Request) {
     if (this.initializingPromise) {
       return this.initializingPromise;
     }
@@ -117,7 +155,10 @@ export class OptimizedImage {
 
   getCacheSize() {
     let size = this.originalData?.length ?? 0;
-    for (const buffer of this.sizes.values()) {
+    for (const buffer of this.sizesWebp.values()) {
+      size += buffer.length;
+    }
+    for (const buffer of this.sizesAvif.values()) {
       size += buffer.length;
     }
 
