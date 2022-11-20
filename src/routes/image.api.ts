@@ -19,8 +19,8 @@ export async function get(ctx: RequestContext) {
     let image = imageCache.get(id);
     if (!image) {
       image = new OptimizedImage(id);
-      await image.initialize(ctx.request);
       imageCache.set(id, image);
+      await image.initialize(ctx.request);
     }
 
     try {
