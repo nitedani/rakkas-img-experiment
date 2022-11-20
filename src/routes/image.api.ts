@@ -34,7 +34,6 @@ export async function get(ctx: RequestContext) {
         return new Response(data, {
           headers: {
             "Content-Type": `image/${format}`,
-            "Content-Length": data.length.toString(),
             "Cache-Control": "public, max-age=31536000, immutable",
           },
         });
