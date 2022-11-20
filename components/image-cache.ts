@@ -14,9 +14,10 @@ class ImageCache {
     return val;
   }
   set(key: string, value: OptimizedImage) {
-    value.lock();
-    this.cache.set(key, value);
-    this.sweep();
+    if (this.sweep() < this.maxSize) {
+      value.lock();
+      this.cache.set(key, value);
+    }
   }
   sweep() {
     let size = 0;
@@ -35,6 +36,7 @@ class ImageCache {
         this.cache.delete(key);
       }
     }
+    return size;
   }
 }
 
