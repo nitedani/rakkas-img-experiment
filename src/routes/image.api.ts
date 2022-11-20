@@ -1,4 +1,3 @@
-import { getSizeForRequest } from "components/constants";
 import { imageCache } from "components/image-cache";
 import { OptimizedImage, SizeError } from "components/optimized-image";
 import { RequestContext } from "rakkasjs";
@@ -11,11 +10,11 @@ export async function get(ctx: RequestContext) {
   if (!id || !_size) {
     return new Response("Missing id", { status: 400 });
   }
-  const newSize = getSizeForRequest(Number(_size));
+
   const format = ctx.request.headers.get("accept")?.includes("avif")
     ? "avif"
     : "webp";
-  const key = `${id}-${newSize}-${format}`;
+  const key = `${id}-${_size}-${format}`;
   const _pending = pending.get(key);
   if (_pending) {
     return (await _pending).clone();

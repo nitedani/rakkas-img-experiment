@@ -23,9 +23,20 @@ export const isPxRequest = (width: string | number) => {
   }
   return null;
 };
+export const getSizeForRequest = (width: number) => {
+  const sizes = defaultSizes;
+  for (const size of sizes) {
+    if (width <= size) {
+      return size;
+    }
+  }
+  return sizes[sizes.length - 1];
+};
 
 export const createSrcSet = (id: string, width: string | number) => {
-  if (isPxRequest(width)) {
+  const px = isPxRequest(width);
+  if (px) {
+    width = getSizeForRequest(px);
     return `/image?id=${id}&size=${width} ${width}w`;
   }
   const srcSet = defaultSizes.map((size) => {

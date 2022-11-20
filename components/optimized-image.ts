@@ -2,13 +2,8 @@ import { readFile } from "fs/promises";
 import { join } from "path";
 import { cwd } from "process";
 import sharp from "sharp";
-import {
-  avifQuality,
-  defaultSizes,
-  getSizeForRequest,
-  webpQuality,
-} from "./constants";
 import { fileURLToPath } from "url";
+import { avifQuality, defaultSizes, webpQuality } from "./constants";
 export class SizeError extends Error {
   constructor() {
     super();
@@ -79,12 +74,8 @@ export class OptimizedImage {
     }
 
     await this.initializingPromise;
-    if (size !== this.originalSize) {
-      size = getSizeForRequest(size);
-    }
-    if (!this.allowedSizes.has(size)) {
-      console.log("size not allowed", size);
 
+    if (!this.allowedSizes.has(size)) {
       throw new SizeError();
     }
 
