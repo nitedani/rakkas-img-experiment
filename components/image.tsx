@@ -29,7 +29,6 @@ export const Image = ({ src, width, height }: ImageProps) => {
     <div
       style={{
         display: "flex",
-
         width: width,
         height: height,
       }}
