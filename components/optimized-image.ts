@@ -11,8 +11,6 @@ export class SizeError extends Error {
   }
 }
 
-// keep this in memory forever
-const _allowedSizes: Map<string, Set<number>> = new Map();
 export class OptimizedImage {
   id: string;
 
@@ -23,6 +21,7 @@ export class OptimizedImage {
 
   initializingPromise?: Promise<void>;
 
+  allowedSizes = new Set(defaultSizes);
   sizesWebp: Map<number, Buffer> = new Map();
   sizesAvif: Map<number, Buffer> = new Map();
   locked = false;
@@ -31,16 +30,6 @@ export class OptimizedImage {
 
   constructor(id: string) {
     this.id = id;
-  }
-
-  get allowedSizes() {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    //@ts-ignore
-    return _allowedSizes.get(this.id);
-  }
-
-  set allowedSizes(sizes: Set<number>) {
-    _allowedSizes.set(this.id, sizes);
   }
 
   lock() {
@@ -141,15 +130,11 @@ export class OptimizedImage {
     return { data, redirectTo: null };
   }
 
-  initialize(request: Request, allowedSizes: number[] = defaultSizes) {
+  initialize(request: Request) {
     if (this.initializingPromise) {
       return this.initializingPromise;
     }
     this.initializingPromise = (async () => {
-      // this can already be set, allowedSizes is not cleared when this instance is disposed
-      if (!this.allowedSizes) {
-        this.allowedSizes = new Set(allowedSizes);
-      }
       let buffer: Buffer;
       const isLocal = this.id.startsWith("/");
       if (isLocal) {
