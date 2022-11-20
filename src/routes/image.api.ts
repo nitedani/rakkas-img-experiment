@@ -10,8 +10,13 @@ export async function get(ctx: RequestContext) {
   if (!id || !_size) {
     return new Response("Missing id", { status: 400 });
   }
-  if (pending.has(`${id}_${_size}`)) {
-    return pending.get(`${id}_${_size}`)!;
+  const format = ctx.request.headers.get("accept")?.includes("avif")
+    ? "avif"
+    : "webp";
+  const key = `${id}-${_size}-${format}`;
+  const _pending = pending.get(key);
+  if (_pending) {
+    return (await _pending).clone();
   }
 
   const promise = (async () => {
@@ -24,9 +29,6 @@ export async function get(ctx: RequestContext) {
     }
 
     try {
-      const format = ctx.request.headers.get("accept")?.includes("avif")
-        ? "avif"
-        : "webp";
       const { data, redirectTo } = await image.getSize(width, format);
       if (data) {
         return new Response(data, {
@@ -49,8 +51,8 @@ export async function get(ctx: RequestContext) {
       return new Response("Bad request", { status: 400 });
     }
   })();
-  pending.set(`${id}_${_size}`, promise);
+  pending.set(key, promise);
   const result = await promise;
-  pending.delete(`${id}_${_size}`);
+  pending.delete(key);
   return result;
 }
