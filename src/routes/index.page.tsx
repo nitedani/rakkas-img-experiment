@@ -17,7 +17,7 @@ const urls = [
   },
   {
     src: "https://i.pinimg.com/736x/ff/6b/13/ff6b13316842b4b84f237f605f0c3f33.jpg",
-    width: 800,
+    width: "100%",
   },
 ];
 
