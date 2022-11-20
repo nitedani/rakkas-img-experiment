@@ -9,13 +9,11 @@ class ImageCache {
     const val = this.cache.get(key);
     if (val) {
       val.lastAccess = Date.now();
-      val.lock();
     }
     return val;
   }
   set(key: string, value: OptimizedImage) {
     if (this.sweep() < this.maxSize) {
-      value.lock();
       this.cache.set(key, value);
     }
   }
@@ -27,7 +25,7 @@ class ImageCache {
     if (size > this.maxSize) {
       const sorted = [...this.cache.entries()]
         .sort(([, a], [, b]) => b.lastAccess - a.lastAccess)
-        .filter(([, image]) => !image.locked);
+        .filter(([, image]) => image.lastAccess < Date.now() - 1000);
       for (const [key, image] of sorted) {
         if (size <= this.maxSize) {
           break;

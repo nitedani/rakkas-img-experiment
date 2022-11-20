@@ -24,22 +24,10 @@ export class OptimizedImage {
   allowedSizes = new Set(defaultSizes);
   sizesWebp: Map<number, Buffer> = new Map();
   sizesAvif: Map<number, Buffer> = new Map();
-  locked = false;
-  lockTimeout?: NodeJS.Timeout;
   lastAccess = Date.now();
 
   constructor(id: string) {
     this.id = id;
-  }
-
-  lock() {
-    if (this.lockTimeout) {
-      clearTimeout(this.lockTimeout);
-    }
-    this.locked = true;
-    this.lockTimeout = setTimeout(() => {
-      this.locked = false;
-    }, 5000);
   }
 
   async getSize(size: number, format: "webp" | "avif") {
