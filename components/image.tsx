@@ -1,6 +1,7 @@
 import { useRequestContext } from "rakkasjs";
 import { createSrcSet, getOptimalStartingWidth } from "./image-utils";
 import { ImageProps } from "./image-types";
+import { useMemo } from "react";
 
 export const Image = ({ src, width, height }: ImageProps) => {
   if (typeof width === "string" && width.endsWith("px")) {
@@ -8,13 +9,22 @@ export const Image = ({ src, width, height }: ImageProps) => {
   }
   const isPxRequest = typeof width === "number";
   const ctx = useRequestContext();
-  const size = isPxRequest
-    ? width
-    : getOptimalStartingWidth(
-        ctx?.request.headers.get("user-agent") || window.navigator.userAgent
-      );
+  const size = useMemo(() => {
+    if (isPxRequest) {
+      return width;
+    } else {
+      if (ctx) {
+        return getOptimalStartingWidth(ctx.request.headers.get("user-agent"));
+      } else {
+        return getOptimalStartingWidth(window.navigator.userAgent);
+      }
+    }
+  }, [isPxRequest, width, ctx]);
 
-  const srcSet = !isPxRequest ? createSrcSet(src) : undefined;
+  const srcSet = useMemo(() => {
+    return !isPxRequest ? createSrcSet(src) : undefined;
+  }, [isPxRequest, src]);
+
   return (
     <div
       style={{
