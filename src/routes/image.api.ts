@@ -35,6 +35,7 @@ export async function get(ctx: RequestContext) {
           headers: {
             "Content-Type": `image/${format}`,
             "Content-Length": data.length.toString(),
+            "Cache-Control": "public, max-age=31536000, immutable",
           },
         });
       }
@@ -48,6 +49,7 @@ export async function get(ctx: RequestContext) {
       if (error instanceof SizeError) {
         return new Response("Size not allowed", { status: 200 });
       }
+      console.error(error);
       return new Response("Bad request", { status: 400 });
     }
   })();
