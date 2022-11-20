@@ -44,7 +44,7 @@ export async function get(ctx: RequestContext) {
       });
     } catch (error: any) {
       if (error instanceof SizeError) {
-        return new Response("Size not allowd", { status: 400 });
+        return new Response("Size not allowed", { status: 400 });
       }
       return new Response("Bad request", { status: 400 });
     }
