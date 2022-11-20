@@ -15,7 +15,7 @@ export const Image = ({ src, width, height }: ImageProps) => {
     } else {
       if (ctx) {
         return getOptimalStartingWidth(ctx.request.headers.get("user-agent"));
-      } else {
+      } else if (typeof window !== "undefined") {
         return getOptimalStartingWidth(window.navigator.userAgent);
       }
     }

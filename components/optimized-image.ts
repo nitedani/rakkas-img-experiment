@@ -3,7 +3,7 @@ import { join } from "path";
 import { cwd } from "process";
 import sharp from "sharp";
 import { avifQuality, defaultSizes, webpQuality } from "./constants";
-
+import { fileURLToPath } from "url";
 export class SizeError extends Error {
   constructor() {
     super();
@@ -137,7 +137,16 @@ export class OptimizedImage {
       let buffer: Buffer;
       const isLocal = this.id.startsWith("/");
       if (isLocal) {
-        buffer = await readFile(join(cwd(), this.id));
+        // this.id = `http://localhost:5173${this.id}`;
+
+        if (import.meta.env.DEV) {
+          buffer = await readFile(join(cwd(), this.id));
+        } else {
+          const __dirname = fileURLToPath(new URL(".", import.meta.url));
+          buffer = await readFile(
+            join(__dirname, "..", "..", "client", this.id)
+          );
+        }
       } else {
         const res = await fetch(this.id, {
           headers: request.headers,
