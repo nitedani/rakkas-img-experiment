@@ -1,6 +1,15 @@
-export interface ImageProps {
+declare const VALID_LOADING_VALUES: readonly ["lazy", "eager", undefined];
+declare type LoadingValue = typeof VALID_LOADING_VALUES[number];
+export declare type SafeNumber = number | `${number}`;
+export declare type ImageProps = Omit<
+  JSX.IntrinsicElements["img"],
+  "src" | "srcSet" | "ref" | "alt" | "width" | "height" | "loading"
+> & {
   src: string;
-  width: number | string;
-  height?: number | string;
-  quality?: number;
-}
+  alt: string;
+  width?: SafeNumber;
+  height?: SafeNumber;
+  quality?: SafeNumber;
+  fill?: boolean;
+  loading?: LoadingValue;
+};
